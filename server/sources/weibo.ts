@@ -1,4 +1,12 @@
 import * as cheerio from "cheerio"
+import { Agent } from "undici"
+
+// 微博服务器 SSL 证书时间经常异常，需要放宽 TLS 验证
+const weiboAgent = new Agent({
+  connect: {
+    rejectUnauthorized: false,
+  },
+})
 
 export default defineSource(async () => {
   const baseurl = "https://s.weibo.com"
@@ -6,6 +14,7 @@ export default defineSource(async () => {
 
   const weiboCookie = process.env.WEIBO_COOKIE
   const html = await myFetch(url, {
+    dispatcher: weiboAgent,
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
       // https://github.com/v5tech/weibo-trending-hot-search

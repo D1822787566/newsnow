@@ -33,11 +33,11 @@ export const CardWrapper = forwardRef<HTMLElement, ItemsProps>(({ id, isDragging
     <div
       ref={ref}
       className={$(
-        "flex flex-col h-500px rounded-2xl p-4 cursor-default",
-        // "backdrop-blur-5",
+        "flex flex-col h-500px cursor-default",
         "transition-opacity-300",
+        "newsnow-card",
+        `newsnow-card--${sources[id].color}`,
         isDragging && "op-50",
-        `bg-${sources[id].color}-500 dark:bg-${sources[id].color} bg-op-40!`,
       )}
       style={{
         transformOrigin: "50% 50%",
@@ -106,6 +106,8 @@ function NewsCard({ id, setHandleRef }: NewsCardProps) {
 
   return (
     <>
+      {/* DFL 顶部色条 */}
+      <div className="newsnow-card__accent-bar" />
       <div className={$("flex justify-between mx-2 mt-0 mb-2 items-center")}>
         <div className="flex gap-2 items-center">
           <a
@@ -120,14 +122,14 @@ function NewsCard({ id, setHandleRef }: NewsCardProps) {
           <span className="flex flex-col">
             <span className="flex items-center gap-2">
               <span
-                className="text-xl font-bold"
+                className="newsnow-card__name text-xl"
                 title={sources[id].desc}
               >
                 {sources[id].name}
               </span>
-              {sources[id]?.title && <span className={$("text-sm", `color-${sources[id].color} bg-base op-80 bg-op-50! px-1 rounded`)}>{sources[id].title}</span>}
+              {sources[id]?.title && <span className="newsnow-card__hot-tag text-sm px-1 rounded">{sources[id].title}</span>}
             </span>
-            <span className="text-xs op-70"><UpdatedTime isError={isError} updatedTime={data?.updatedTime} /></span>
+            <span className="newsnow-card__time text-xs"><UpdatedTime isError={isError} updatedTime={data?.updatedTime} /></span>
           </span>
         </div>
         <div className={$("flex gap-2 text-lg", `color-${sources[id].color}`)}>
@@ -152,11 +154,11 @@ function NewsCard({ id, setHandleRef }: NewsCardProps) {
       </div>
 
       <OverlayScrollbar
-        className={$([
-          "h-full p-2 overflow-y-auto rounded-2xl bg-base bg-op-70!",
+        className={$(
+          "newsnow-card__list h-full p-2 overflow-y-auto",
           isFetching && `animate-pulse`,
           `sprinkle-${sources[id].color}`,
-        ])}
+        )}
         options={{
           overflow: { x: "hidden" },
         }}
@@ -237,16 +239,16 @@ function NewsListHot({ items }: { items: NewsItem[] }) {
           key={item.id}
           title={item.extra?.hover}
           className={$(
-            "flex gap-2 items-center items-stretch relative cursor-pointer [&_*]:cursor-pointer transition-all",
+            "newsnow-card__item flex gap-2 items-center items-stretch relative cursor-pointer [&_*]:cursor-pointer transition-all",
             "hover:bg-neutral-400/10 rounded-md pr-1 visited:(text-neutral-400)",
           )}
         >
-          <span className={$("bg-neutral-400/10 min-w-6 flex justify-center items-center rounded-md text-sm")}>
+          <span className="newsnow-card__rank">
             {i + 1}
           </span>
           {!!item.extra?.diff && <DiffNumber diff={item.extra.diff} />}
           <span className="self-start line-height-none">
-            <span className="mr-2 text-base">
+            <span className="newsnow-card__title mr-2 text-base">
               {item.title}
             </span>
             <span className="text-xs text-neutral-400/80 truncate align-middle">
@@ -276,7 +278,7 @@ function NewsListTimeLine({ items }: { items: NewsItem[] }) {
           </span>
           <a
             className={$(
-              "ml-2 px-1 hover:bg-neutral-400/10 rounded-md visited:(text-neutral-400/80)",
+              "newsnow-card__title ml-2 px-1 hover:bg-neutral-400/10 rounded-md visited:(text-neutral-400/80)",
               "cursor-pointer [&_*]:cursor-pointer transition-all",
             )}
             href={width < 768 ? item.mobileUrl || item.url : item.url}

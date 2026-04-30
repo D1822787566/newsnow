@@ -1,5 +1,6 @@
 @import url(@unocss/reset/tailwind.css);
 @import url(overlayscrollbars/overlayscrollbars.css);
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Fraunces:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 html,
 body,
@@ -20,7 +21,32 @@ html.dark {
 }
 
 body {
-  --at-apply: color-base bg-base sprinkle-primary text-base;
+  --dfl-red:    #D14437;
+  --dfl-blue:   #3B7AB8;
+  --dfl-yellow: #E8B23A;
+  --dfl-green:  #6B8E5A;
+  --dfl-plum:   #8B4A6B;
+  --dfl-paper:  #F2EAD3;
+  --dfl-ink:    #1F1A14;
+  --dfl-ink-2:  rgba(31, 26, 20, 0.7);
+  --dfl-ink-3:  rgba(31, 26, 20, 0.55);
+  --dfl-ink-4:  rgba(31, 26, 20, 0.35);
+  --dfl-rule:   rgba(31, 26, 20, 0.08);
+  --dfl-rule-2: rgba(31, 26, 20, 0.14);
+  --dfl-glass-border: rgba(255, 255, 255, 0.65);
+  --dfl-glass-hl-top: rgba(255, 255, 255, 0.85);
+  --dfl-glass-hl-bot: rgba(31, 26, 20, 0.05);
+  --dfl-glass-shadow: 0 8px 24px rgba(31, 26, 20, 0.08);
+
+  /* DFL 纸底 + SVG noise */
+  background-color: var(--dfl-paper);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' seed='9'/><feColorMatrix values='0 0 0 0 0.28  0 0 0 0 0.16  0 0 0 0 0.06  0 0 0 0.22 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='2' seed='20'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.1  0 0 0 0 0.04  0 0 0 0.14 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='1' seed='3'/><feColorMatrix values='0 0 0 0 0.15  0 0 0 0 0.08  0 0 0 0 0.02  0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px, 320px 320px, 480px 480px;
+  background-attachment: fixed, fixed, fixed;
+  color: var(--dfl-ink);
   -moz-user-select: none;
   -webkit-user-select: none;
   user-select: none;
@@ -55,4 +81,303 @@ button:disabled {
 
 .grabbing * {
   cursor: grabbing;
+}
+
+/* ═══════════════════════════════════════════════════
+   DFL Theme Overrides — card, typography, colors
+   ═══════════════════════════════════════════════════ */
+
+/* --- 卡片容器：透明玻璃边框，纸纹透出 --- */
+.newsnow-card {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 12px 32px rgba(31, 26, 20, 0.1),
+    0 2px 8px rgba(31, 26, 20, 0.04),
+    inset 0 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 0 rgba(31, 26, 20, 0.07);
+  padding: 16px !important;
+  transition: box-shadow 0.2s ease;
+}
+.newsnow-card:hover {
+  box-shadow:
+    0 16px 40px rgba(31, 26, 20, 0.13),
+    0 4px 12px rgba(31, 26, 20, 0.06),
+    inset 0 2px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -1.5px 0 rgba(31, 26, 20, 0.08);
+}
+
+/* --- 卡片顶部色条 --- */
+.newsnow-card__accent-bar {
+  height: 3px;
+  width: 100%;
+  flex-shrink: 0;
+  margin: -16px -16px 12px;
+  width: calc(100% + 32px);
+}
+
+/* --- 卡片内列表区 --- */
+.newsnow-card .newsnow-card__list {
+  background: rgba(31, 26, 20, 0.03);
+  border-radius: 10px;
+  margin: 0 8px 8px;
+  padding: 4px 0;
+}
+
+/* --- 排名数字：Fraunces italic，加重显示 --- */
+.newsnow-card .newsnow-card__rank {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 900;
+  font-size: 13px;
+  background: transparent !important;
+  color: var(--dfl-ink);
+  min-width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+  border-radius: 0 !important;
+  letter-spacing: -0.5px;
+}
+
+/* --- 条目间距 + 分隔线 --- */
+.newsnow-card__item {
+  padding: 8px 10px !important;
+  border-bottom: 1px solid var(--dfl-rule);
+  transition: background 0.15s;
+}
+.newsnow-card__item:last-child {
+  border-bottom: none;
+}
+.newsnow-card__item:hover {
+  background: rgba(31, 26, 20, 0.04) !important;
+  border-radius: 6px;
+}
+
+/* --- 标签：平台色 15% 透明度 + 平台色字 --- */
+.newsnow-card .newsnow-card__hot-tag {
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* 各平台色 → DFL 色系映射（卡片内元素） */
+/* 使用 CSS 变量在卡片上定义，子元素继承 */
+.newsnow-card--blue   { --pc: var(--dfl-blue); }
+.newsnow-card--red    { --pc: var(--dfl-red); }
+.newsnow-card--green  { --pc: var(--dfl-green); }
+.newsnow-card--plum   { --pc: var(--dfl-plum); }
+.newsnow-card--orange { --pc: var(--dfl-yellow); }
+.newsnow-card--gray   { --pc: var(--dfl-ink-3); }
+.newsnow-card--slate  { --pc: var(--dfl-ink-3); }
+.newsnow-card--indigo { --pc: var(--dfl-blue); }
+.newsnow-card--emerald{ --pc: var(--dfl-green); }
+.newsnow-card--teal   { --pc: var(--dfl-green); }
+
+.newsnow-card__accent-bar { background: var(--pc); }
+
+.newsnow-card--blue   .newsnow-card__hot-tag { background: rgba(59,122,184,0.15); color: var(--dfl-blue); }
+.newsnow-card--red    .newsnow-card__hot-tag { background: rgba(209,68,55,0.15); color: var(--dfl-red); }
+.newsnow-card--green  .newsnow-card__hot-tag { background: rgba(107,142,90,0.15); color: var(--dfl-green); }
+.newsnow-card--plum   .newsnow-card__hot-tag { background: rgba(139,74,107,0.15); color: var(--dfl-plum); }
+.newsnow-card--orange .newsnow-card__hot-tag { background: rgba(232,178,58,0.2); color: #9a8100; }
+.newsnow-card--gray   .newsnow-card__hot-tag { background: rgba(31,26,20,0.08); color: var(--dfl-ink-3); }
+.newsnow-card--slate  .newsnow-card__hot-tag { background: rgba(31,26,20,0.08); color: var(--dfl-ink-3); }
+.newsnow-card--indigo .newsnow-card__hot-tag { background: rgba(59,122,184,0.15); color: var(--dfl-blue); }
+.newsnow-card--emerald .newsnow-card__hot-tag { background: rgba(107,142,90,0.15); color: var(--dfl-green); }
+.newsnow-card--teal   .newsnow-card__hot-tag { background: rgba(107,142,90,0.15); color: var(--dfl-green); }
+
+/* --- 平台名：Noto Serif SC 粗体 --- */
+.newsnow-card__name {
+  font-family: 'Noto Serif SC', serif !important;
+  font-weight: 700;
+  color: var(--dfl-ink);
+}
+
+/* --- 更新时间：Fraunces italic --- */
+.newsnow-card__time {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--dfl-ink-3);
+}
+
+/* --- 标题：Noto Serif SC 粗体，杂志感 --- */
+.newsnow-card__title {
+  color: var(--dfl-ink);
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+/* --- 时间线条目分隔 --- */
+.newsnow-card__list li {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--dfl-rule);
+}
+.newsnow-card__list li:last-child {
+  border-bottom: none;
+}
+.newsnow-card__list a:hover {
+  background: rgba(31, 26, 20, 0.04);
+  border-radius: 6px;
+}
+
+/* --- 热度/辅助信息：提高可读性 --- */
+.text-neutral-400\/80,
+.text-neutral-400\/50 {
+  color: var(--dfl-ink-2) !important;
+}
+.text-neutral-500 {
+  color: var(--dfl-ink-2) !important;
+}
+
+/* --- 列表区背景覆盖 UnoCSS bg-base --- */
+.newsnow-card .bg-base,
+.newsnow-card__list {
+  background: rgba(31, 26, 20, 0.02) !important;
+  border-radius: 10px;
+  padding: 2px 0;
+  margin: 0 4px 4px;
+}
+
+/* --- 全局文字色覆盖 --- */
+.newsnow-wrap,
+.newsnow-wrap a,
+.newsnow-wrap span,
+.newsnow-wrap button {
+  color: var(--dfl-ink);
+}
+
+/* --- 文字色阶（UnoCSS 的 color-base 覆盖） --- */
+.color-neutral-800 { color: var(--dfl-ink) !important; }
+.color-neutral-300 { color: var(--dfl-ink-2) !important; }
+.color-neutral-400 { color: var(--dfl-ink-3) !important; }
+.text-neutral-500  { color: var(--dfl-ink-3) !important; }
+
+/* --- 全局 hover 覆盖 --- */
+.hover\:bg-neutral-400\/10:hover,
+.hover\:bg-neutral-400\/20:hover {
+  background: rgba(31, 26, 20, 0.05) !important;
+}
+
+/* --- Header：透明融入纸底，不独立成块 --- */
+header {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px dashed var(--dfl-rule-2) !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+/* --- Header 文字色 --- */
+header a, header span, header button {
+  color: var(--dfl-ink) !important;
+}
+
+/* --- Header 品牌字：替换 Baloo 2 为 DFL 杂志标题风格 --- */
+header .font-brand {
+  font-family: 'Noto Serif SC', serif !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em;
+  line-height: 0.9 !important;
+}
+header .font-brand p {
+  margin: 0;
+}
+header .font-brand p:first-child {
+  font-size: 1.25rem;
+}
+header .font-brand p:last-child {
+  font-size: 1.25rem;
+}
+header .font-brand + .btn,
+header .font-mono {
+  font-family: 'Fraunces', serif !important;
+  font-style: italic;
+  color: var(--dfl-ink-3) !important;
+}
+
+/* --- Header logo "Now" 的 N 字色 --- */
+header .color-primary-6 { color: var(--dfl-red) !important; }
+header .text-primary-600 { color: var(--dfl-red) !important; }
+
+/* --- 顶部分类导航：DFL 杂志小标签 --- */
+header .justify-self-center > span > span {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid var(--dfl-rule-2);
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  padding: 6px 10px !important;
+}
+header .justify-self-center a,
+header .justify-self-center button {
+  font-family: 'Noto Serif SC', serif !important;
+  font-weight: 700;
+  font-size: 0.84rem;
+  color: var(--dfl-ink-2) !important;
+  padding: 3px 9px !important;
+  border-radius: 999px !important;
+}
+header .justify-self-center a:hover,
+header .justify-self-center button:hover {
+  background: rgba(31, 26, 20, 0.05) !important;
+  color: var(--dfl-ink) !important;
+}
+header .justify-self-center .color-primary,
+header .justify-self-center .font-bold {
+  color: var(--dfl-red) !important;
+  font-weight: 900 !important;
+}
+
+/* --- Footer 文字色 --- */
+footer {
+  color: var(--dfl-ink-3) !important;
+}
+
+/* --- 滚动条（亮色模式） --- */
+::-webkit-scrollbar-thumb {
+  background: var(--dfl-ink-4);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dfl-ink-3);
+}
+
+/* --- OverlayScrollbars 亮色模式 --- */
+.os-theme-light {
+  --os-handle-bg: rgba(31, 26, 20, 0.3);
+  --os-handle-bg-hover: rgba(31, 26, 20, 0.45);
+  --os-handle-bg-active: rgba(31, 26, 20, 0.55);
+}
+
+/* --- Diff 数字颜色：DFL 色系 --- */
+.text-green { color: var(--dfl-green) !important; }
+.text-red { color: var(--dfl-red) !important; }
+
+/* --- cmdk 搜索弹窗适配亮色 --- */
+[cmdk-dialog] {
+  background: var(--dfl-paper) !important;
+  border: 1.5px solid var(--dfl-glass-border);
+  box-shadow: var(--dfl-glass-shadow);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+[cmdk-overlay] {
+  background: rgba(31, 26, 20, 0.3) !important;
+}
+[cmdk-input] {
+  color: var(--dfl-ink) !important;
+}
+[cmdk-group-heading] {
+  color: var(--dfl-ink-3) !important;
+}
+
+/* --- Toast 亮色适配 --- */
+.toast {
+  background: var(--dfl-paper) !important;
+  border: 1px solid var(--dfl-rule-2);
+  color: var(--dfl-ink) !important;
 }

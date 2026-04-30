@@ -4,10 +4,11 @@ import { getCacheTable } from "#/database/cache"
 import type { CacheInfo } from "#/types"
 
 export default defineEventHandler(async (event): Promise<SourceResponse> => {
+  let id: SourceID | undefined
   try {
     const query = getQuery(event)
     const latest = query.latest !== undefined && query.latest !== "false"
-    let id = query.id as SourceID
+    id = query.id as SourceID
     const isValid = (id: SourceID) => !id || !sources[id] || !getters[id]
 
     if (isValid(id)) {
@@ -68,8 +69,9 @@ export default defineEventHandler(async (event): Promise<SourceResponse> => {
         updatedTime: now,
         items: newData,
       }
-    } catch (e) {
-      if (cache!) {
+    } catch (e: any) {
+      if (cache) {
+        logger.warn(`fetch ${id} failed, returning cached data`)
         return {
           status: "cache",
           id,
@@ -81,6 +83,16 @@ export default defineEventHandler(async (event): Promise<SourceResponse> => {
       }
     }
   } catch (e: any) {
+    // 对于微博等需要认证的数据源，返回友好的业务错误提示
+    const isFetchFailed = e.message?.includes("fetch failed") || e.message?.includes("302")
+    if (isFetchFailed && id === "weibo") {
+      logger.error(e)
+      throw createError({
+        statusCode: 503,
+        message: "微博热榜需要有效的登录凭证。请在服务端配置 WEIBO_COOKIE 环境变量，或等待管理员更新 Cookie。",
+        data: { source: id, errorType: "auth_required" },
+      })
+    }
     logger.error(e)
     throw createError({
       statusCode: 500,

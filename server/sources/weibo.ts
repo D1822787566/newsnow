@@ -4,11 +4,12 @@ export default defineSource(async () => {
   const baseurl = "https://s.weibo.com"
   const url = `${baseurl}/top/summary?cate=realtimehot`
 
+  const weiboCookie = process.env.WEIBO_COOKIE
   const html = await myFetch(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
       // https://github.com/v5tech/weibo-trending-hot-search
-      "Cookie": "SUB=_2AkMWIuNSf8NxqwJRmP8dy2rhaoV2ygrEieKgfhKJJRMxHRl-yT9jqk86tRB6PaLNvQZR6zYUcYVT1zSjoSreQHidcUq7",
+      ...(weiboCookie ? { "Cookie": weiboCookie } : {}),
       "referer": url,
     },
   })

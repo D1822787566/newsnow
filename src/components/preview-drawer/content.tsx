@@ -17,7 +17,15 @@ export function DrawerContent({
 }: DrawerContentProps) {
   const sanitized = DOMPurify.sanitize(content, {
     ALLOWED_TAGS: ["p", "br", "strong", "em", "u", "a", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "blockquote", "code", "pre", "img", "figure", "figcaption"],
-    ALLOWED_ATTR: ["href", "src", "alt", "title", "class"],
+    ALLOWED_ATTR: ["href", "src", "alt", "title", "class", "target", "rel"],
+    ADD_HOOKS: {
+      afterSanitizeAttributes: (node: Element) => {
+        if (node.tagName === "A" && node.getAttribute("href")) {
+          node.setAttribute("target", "_blank")
+          node.setAttribute("rel", "noopener noreferrer")
+        }
+      },
+    },
   })
 
   return (

@@ -20,7 +20,10 @@ export default defineEventHandler(async (event) => {
 
   try {
     const urlObj = new URL(url)
-    if (urlObj.hostname !== expectedDomain && !urlObj.hostname.endsWith(`.${expectedDomain}`)) {
+    const actualHostname = urlObj.hostname.toLowerCase()
+    const expectedLower = expectedDomain.toLowerCase()
+    // Match exact domain or subdomain (e.g., "www.zhihu.com" matches "zhihu.com")
+    if (actualHostname !== expectedLower && !actualHostname.endsWith(`.${expectedLower}`)) {
       throw createError({ statusCode: 400, message: "URL 域名与 sourceId 不匹配" })
     }
   } catch (e: any) {

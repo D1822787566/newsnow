@@ -52,19 +52,17 @@ export class CredentialTable {
   }
 
   async upsert(sourceId: string, domain: string, cookieValue: string): Promise<number> {
-    const existing = await this.getBySourceId(sourceId)
-    if (existing) {
-      await this.db.prepare(`
-        UPDATE credentials SET domain = ?, cookie_value = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE source_id = ?
-      `).run(domain, cookieValue, sourceId)
-      return existing.id
-    }
     const result = await this.db.prepare(`
       INSERT INTO credentials (source_id, domain, cookie_value)
       VALUES (?, ?, ?)
+      ON CONFLICT(source_id) DO UPDATE SET
+        domain = excluded.domain,
+        cookie_value = excluded.cookie_value,
+        updated_at = CURRENT_TIMESTAMP
     `).run(sourceId, domain, cookieValue)
-    return result.id as number
+    // Get the id (either new insert or existing)
+    const row = await this.getBySourceId(sourceId)
+    return row!.id
   }
 
   async delete(id: number): Promise<boolean> {

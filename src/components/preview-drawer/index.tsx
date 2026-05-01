@@ -38,7 +38,17 @@ export function PreviewDrawer({ open, onClose, url, sourceId }: PreviewDrawerPro
 
   useEffect(() => {
     if (open && url && sourceId) {
-      setState(s => ({ ...s, loading: true, error: null, content: "" }))
+      setState({
+        loading: true,
+        error: null,
+        title: "",
+        content: "",
+        source: "",
+        author: "",
+        usedCredential: null,
+        credentialExpired: false,
+        elapsed: "",
+      })
       myFetch("/preview/fetch", {
         method: "POST",
         body: { url, sourceId },

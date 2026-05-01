@@ -18,7 +18,8 @@ export function Menu() {
   const [shown, show] = useState(false)
   const [credOpen, setCredOpen] = useState(false)
   return (
-    <span className="relative" onMouseEnter={() => show(true)} onMouseLeave={() => show(false)}>
+    <>
+      <span className="relative" onMouseEnter={() => show(true)} onMouseLeave={() => show(false)}>
       <span className="flex items-center scale-90">
         {
           enableLogin && loggedIn && userInfo.avatar
@@ -99,7 +100,8 @@ export function Menu() {
           </motion.div>
         </div>
       )}
-    </span>
-    <CredentialManager open={credOpen} onClose={() => setCredOpen(false)} />
+      </span>
+      <CredentialManager open={credOpen} onClose={() => setCredOpen(false)} />
+    </>
   )
 }

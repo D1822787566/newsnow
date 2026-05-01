@@ -3,6 +3,7 @@ import { CredentialTable } from "#/database/credentials"
 export default defineEventHandler(async () => {
   const db = useDatabase()
   const credTable = new CredentialTable(db)
+  await credTable.init()
   const credentials = await credTable.getAll()
 
   return {

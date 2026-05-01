@@ -3,6 +3,7 @@ import { CredentialTable } from "#/database/credentials"
 export default defineEventHandler(async (event) => {
   const db = useDatabase()
   const credTable = new CredentialTable(db)
+  await credTable.init()
 
   const id = Number(getRouterParam(event, "id"))
   if (isNaN(id)) {

@@ -5,6 +5,7 @@ import { getDomainFromSourceId } from "#/utils/sources-domains"
 export default defineEventHandler(async (event) => {
   const db = useDatabase()
   const credTable = new CredentialTable(db)
+  await credTable.init()
 
   const body = await readBody(event)
   const { url, sourceId }: { url: string, sourceId: string } = body

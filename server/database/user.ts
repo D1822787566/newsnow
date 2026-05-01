@@ -1,5 +1,6 @@
 import type { Database } from "db0"
 import type { UserInfo } from "#/types"
+import { CredentialTable } from "./credentials"
 
 export class UserTable {
   private db
@@ -22,6 +23,7 @@ export class UserTable {
       CREATE INDEX IF NOT EXISTS idx_user_id ON user(id);
     `).run()
     logger.success(`init user table`)
+    await new CredentialTable(this.db).init()
   }
 
   async addUser(id: string, email: string, type: "github") {

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion"
+import { CredentialManager } from "../credential-manager"
 
 // function ThemeToggle() {
 //   const { isDark, toggleDark } = useDark()
@@ -15,6 +16,7 @@ import { motion } from "framer-motion"
 export function Menu() {
   const { loggedIn, login, logout, userInfo, enableLogin } = useLogin()
   const [shown, show] = useState(false)
+  const [credOpen, setCredOpen] = useState(false)
   return (
     <span className="relative" onMouseEnter={() => show(true)} onMouseLeave={() => show(false)}>
       <span className="flex items-center scale-90">
@@ -69,6 +71,12 @@ export function Menu() {
                 <span className="i-ph:github-logo-duotone inline-block" />
                 <span>Star on Github </span>
               </li>
+              {enableLogin && (
+                <li onClick={() => { setCredOpen(true); show(false) }}>
+                  <span className="i-ph:key-duotone inline-block" />
+                  <span>站点凭证管理</span>
+                </li>
+              )}
               <li className="flex gap-2 items-center">
                 <a
                   href="https://github.com/ourongxing/newsnow"
@@ -92,5 +100,6 @@ export function Menu() {
         </div>
       )}
     </span>
+    <CredentialManager open={credOpen} onClose={() => setCredOpen(false)} />
   )
 }

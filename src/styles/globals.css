@@ -557,3 +557,163 @@ footer {
 .preview-drawer__error-btn:hover {
   opacity: 0.9;
 }
+
+/* --- 凭证管理面板 --- */
+.credential-manager__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 26, 20, 0.3);
+  z-index: 2000;
+}
+.credential-manager {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 520px;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: rgba(242, 234, 211, 0.98);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(31, 26, 20, 0.2);
+}
+.credential-manager__header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--dfl-rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.credential-manager__title {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--dfl-ink);
+  margin: 0;
+}
+.credential-manager__desc {
+  font-size: 12px;
+  color: var(--dfl-ink-3);
+  margin: 4px 0 0;
+}
+.credential-manager__body {
+  flex: 1;
+  padding: 16px 24px 24px;
+  overflow-y: auto;
+}
+.credential-manager__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.credential-manager__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid rgba(31, 26, 20, 0.12);
+  border-radius: 8px;
+  background: rgba(31, 26, 20, 0.03);
+}
+.credential-manager__item-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.credential-manager__item-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--dfl-blue);
+}
+.credential-manager__item-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--dfl-ink);
+}
+.credential-manager__item-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.credential-manager__item-badge--valid {
+  background: rgba(107, 142, 90, 0.2);
+  color: var(--dfl-green);
+}
+.credential-manager__item-badge--expired {
+  background: rgba(209, 68, 55, 0.15);
+  color: var(--dfl-red);
+}
+.credential-manager__item-delete {
+  font-size: 12px;
+  color: var(--dfl-ink-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.credential-manager__item-delete:hover {
+  color: var(--dfl-red);
+}
+.credential-manager__add {
+  border: 1.5px dashed rgba(31, 26, 20, 0.15);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(31, 26, 20, 0.02);
+}
+.credential-manager__add-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--dfl-ink);
+}
+.credential-manager__add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.credential-manager__select,
+.credential-manager__input {
+  padding: 8px 12px;
+  border: 1px solid rgba(31, 26, 20, 0.15);
+  border-radius: 6px;
+  background: rgba(242, 234, 211, 0.8);
+  font-size: 13px;
+  color: var(--dfl-ink);
+  font-family: inherit;
+}
+.credential-manager__input {
+  resize: vertical;
+  min-height: 48px;
+  font-family: monospace;
+}
+.credential-manager__error {
+  font-size: 12px;
+  color: var(--dfl-red);
+  margin: 0;
+}
+.credential-manager__submit {
+  padding: 8px 16px;
+  background: var(--dfl-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.credential-manager__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.credential-manager__hint {
+  font-size: 10px;
+  color: var(--dfl-ink-3);
+  margin: 8px 0 0;
+  line-height: 1.5;
+}

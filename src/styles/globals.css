@@ -381,3 +381,36 @@ footer {
   border: 1px solid var(--dfl-rule-2);
   color: var(--dfl-ink) !important;
 }
+
+/* --- 右键上下文菜单 --- */
+.newsnow-context-menu {
+  background: rgba(242, 234, 211, 0.98);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 12px 32px rgba(31, 26, 20, 0.15);
+  min-width: 160px;
+  backdrop-filter: blur(8px);
+}
+.context-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  color: var(--dfl-ink);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+}
+.context-menu__item:hover {
+  background: rgba(31, 26, 20, 0.05);
+}
+.context-menu__item--danger {
+  color: var(--dfl-red);
+}

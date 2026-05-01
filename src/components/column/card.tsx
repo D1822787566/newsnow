@@ -2,9 +2,10 @@ import type { NewsItem, SourceID, SourceResponse } from "@shared/types"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion, useInView } from "framer-motion"
 import { useWindowSize } from "react-use"
-import { forwardRef, useImperativeHandle } from "react"
+import { forwardRef, useImperativeHandle, useState } from "react"
 import { OverlayScrollbar } from "../common/overlay-scrollbar"
 import { safeParseString } from "~/utils"
+import { ContextMenu, type ContextMenuItem } from "../context-menu"
 
 export interface ItemsProps extends React.HTMLAttributes<HTMLDivElement> {
   id: SourceID
@@ -165,7 +166,10 @@ function NewsCard({ id, setHandleRef }: NewsCardProps) {
         defer
       >
         <div className={$("transition-opacity-500", isFetching && "op-20")}>
-          {!!data?.items?.length && (sources[id].type === "hottest" ? <NewsListHot items={data.items} /> : <NewsListTimeLine items={data.items} />)}
+          {!!data?.items?.length && (sources[id].type === "hottest"
+            ? <NewsListHot items={data.items} sourceId={id} />
+            : <NewsListTimeLine items={data.items} sourceId={id} />
+          )}
         </div>
       </OverlayScrollbar>
     </>
@@ -228,8 +232,43 @@ function NewsUpdatedTime({ date }: { date: string | number }) {
   const relativeTime = useRelativeTime(date)
   return <>{relativeTime}</>
 }
-function NewsListHot({ items }: { items: NewsItem[] }) {
+function NewsListHot({ items, sourceId }: { items: NewsItem[], sourceId: SourceID }) {
   const { width } = useWindowSize()
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number; url: string } | null>(null)
+
+  const handleContextMenu = (e: React.MouseEvent, url: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setMenuPos({ x: e.clientX, y: e.clientY, url })
+  }
+
+  const menuItems: ContextMenuItem[] = [
+    {
+      label: "在新标签页打开",
+      icon: "i-ph:arrow-up-right-duotone",
+      action: () => {
+        window.open(menuPos!.url, "_blank")
+      },
+    },
+    {
+      label: "在侧栏预览",
+      icon: "i-ph:sidebar-simple-duotone",
+      action: () => {
+        window.dispatchEvent(new CustomEvent("newsnow:preview", {
+          detail: { url: menuPos!.url, sourceId },
+        }))
+        setMenuPos(null)
+      },
+    },
+    {
+      label: "复制链接",
+      icon: "i-ph:link-duotone",
+      action: () => {
+        navigator.clipboard.writeText(menuPos!.url)
+      },
+    },
+  ]
+
   return (
     <ol className="flex flex-col gap-2">
       {items?.map((item, i) => (
@@ -238,6 +277,7 @@ function NewsListHot({ items }: { items: NewsItem[] }) {
           target="_blank"
           key={item.id}
           title={item.extra?.hover}
+          onContextMenu={(e) => handleContextMenu(e, item.url)}
           className={$(
             "newsnow-card__item flex gap-2 items-center items-stretch relative cursor-pointer [&_*]:cursor-pointer transition-all",
             "hover:bg-neutral-400/10 rounded-md pr-1 visited:(text-neutral-400)",
@@ -257,12 +297,55 @@ function NewsListHot({ items }: { items: NewsItem[] }) {
           </span>
         </a>
       ))}
+      {menuPos && (
+        <ContextMenu
+          x={menuPos.x}
+          y={menuPos.y}
+          items={menuItems}
+          onClose={() => setMenuPos(null)}
+        />
+      )}
     </ol>
   )
 }
 
-function NewsListTimeLine({ items }: { items: NewsItem[] }) {
+function NewsListTimeLine({ items, sourceId }: { items: NewsItem[], sourceId: SourceID }) {
   const { width } = useWindowSize()
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number; url: string } | null>(null)
+
+  const handleContextMenu = (e: React.MouseEvent, url: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setMenuPos({ x: e.clientX, y: e.clientY, url })
+  }
+
+  const menuItems: ContextMenuItem[] = [
+    {
+      label: "在新标签页打开",
+      icon: "i-ph:arrow-up-right-duotone",
+      action: () => {
+        window.open(menuPos!.url, "_blank")
+      },
+    },
+    {
+      label: "在侧栏预览",
+      icon: "i-ph:sidebar-simple-duotone",
+      action: () => {
+        window.dispatchEvent(new CustomEvent("newsnow:preview", {
+          detail: { url: menuPos!.url, sourceId },
+        }))
+        setMenuPos(null)
+      },
+    },
+    {
+      label: "复制链接",
+      icon: "i-ph:link-duotone",
+      action: () => {
+        navigator.clipboard.writeText(menuPos!.url)
+      },
+    },
+  ]
+
   return (
     <ol className="border-s border-neutral-400/50 flex flex-col ml-1">
       {items?.map(item => (
@@ -283,6 +366,7 @@ function NewsListTimeLine({ items }: { items: NewsItem[] }) {
             )}
             href={width < 768 ? item.mobileUrl || item.url : item.url}
             title={item.extra?.hover}
+            onContextMenu={(e) => handleContextMenu(e, item.url)}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -290,6 +374,14 @@ function NewsListTimeLine({ items }: { items: NewsItem[] }) {
           </a>
         </li>
       ))}
+      {menuPos && (
+        <ContextMenu
+          x={menuPos.x}
+          y={menuPos.y}
+          items={menuItems}
+          onClose={() => setMenuPos(null)}
+        />
+      )}
     </ol>
   )
 }

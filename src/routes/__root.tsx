@@ -1,6 +1,7 @@
 import "~/styles/globals.css"
 import "virtual:uno.css"
 import { Outlet, createRootRouteWithContext } from "@tanstack/react-router"
+import { useState, useEffect } from "react"
 import { TanStackRouterDevtools } from "@tanstack/router-devtools"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import type { QueryClient } from "@tanstack/react-query"
@@ -10,6 +11,7 @@ import { GlobalOverlayScrollbar } from "~/components/common/overlay-scrollbar"
 import { Footer } from "~/components/footer"
 import { Toast } from "~/components/common/toast"
 import { SearchBar } from "~/components/common/search-bar"
+import { PreviewDrawer } from "~/components/preview-drawer"
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -29,6 +31,22 @@ function RootComponent() {
   useOnReload()
   useSync()
   usePWA()
+
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewSourceId, setPreviewSourceId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      setPreviewUrl(detail.url)
+      setPreviewSourceId(detail.sourceId)
+      setPreviewOpen(true)
+    }
+    window.addEventListener("newsnow:preview", handler as EventListener)
+    return () => window.removeEventListener("newsnow:preview", handler as EventListener)
+  }, [])
+
   return (
     <>
       <GlobalOverlayScrollbar
@@ -66,6 +84,12 @@ function RootComponent() {
       </GlobalOverlayScrollbar>
       <Toast />
       <SearchBar />
+      <PreviewDrawer
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        url={previewUrl}
+        sourceId={previewSourceId}
+      />
       {import.meta.env.DEV && (
         <>
           <ReactQueryDevtools buttonPosition="bottom-left" />

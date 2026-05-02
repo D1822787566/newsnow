@@ -47,6 +47,39 @@ function getFallbackDflCss(): string {
   `
 }
 
+/**
+ * 在 HTML 的 <head> 最前面注入 <base> 标签，告诉浏览器如何解析相对 URL
+ * @param html - 原始 HTML 字符串
+ * @param baseUrl - 原始页面的完整 URL（如 https://bbs.hupu.com/thread/123）
+ * @returns 注入了 <base> 标签的 HTML
+ */
+export function injectBaseTag(html: string, baseUrl: string): string {
+  // 如果 HTML 中已存在 <base> 标签，直接返回（避免重复注入）
+  if (/<base\s/i.test(html)) {
+    return html;
+  }
+
+  // 提取基础 URL：协议 + 域名 + 端口（不含路径）
+  // 例如 https://bbs.hupu.com/thread/123 → https://bbs.hupu.com
+  const urlObj = new URL(baseUrl);
+  const origin = `${urlObj.protocol}//${urlObj.host}`;
+
+  const baseTag = `<base href="${origin}">`;
+
+  // 优先插入到 <head> 标签之后（最前面位置）
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/(<head[^>]*>)/i, `$1${baseTag}`);
+  }
+
+  // 如果没有 <head>，插入到 <html> 之后
+  if (/<html[^>]*>/i.test(html)) {
+    return html.replace(/(<html[^>]*>)/i, `$1${baseTag}`);
+  }
+
+  // 如果连 <html> 都没有，直接插在最前面
+  return baseTag + html;
+}
+
 /** 将 DFL 样式注入到 HTML 的 <head> 中 */
 export function injectDflStyles(html: string): string {
   const css = getDflInjectCss()
@@ -75,8 +108,11 @@ export function removeCspMeta(html: string): string {
 }
 
 /** 处理完整的代理 HTML 管道 */
-export function processProxyHtml(html: string): string {
+export function processProxyHtml(html: string, baseUrl?: string): string {
   html = removeCspMeta(html)
+  if (baseUrl) {
+    html = injectBaseTag(html, baseUrl)
+  }
   html = injectDflStyles(html)
   return html
 }

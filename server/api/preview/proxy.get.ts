@@ -71,8 +71,8 @@ export default defineEventHandler(async (event) => {
       + "\n<!-- 页面过大，已截断。请在浏览器中打开完整版本 -->"
   }
 
-  // 处理 HTML：移除 CSP meta + 注入 DFL 样式
-  const processedHtml = processProxyHtml(html)
+  // 处理 HTML：移除 CSP meta + 注入 base 标签 + DFL 样式
+  const processedHtml = processProxyHtml(html, url)
 
   // 设置响应
   setResponseStatus(event, 200)

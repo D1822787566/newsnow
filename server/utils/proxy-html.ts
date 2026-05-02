@@ -1,14 +1,17 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { fileURLToPath } from "node:url"
 
-const __dirname = fileURLToPath(new URL(".", import.meta.url))
+// In Nitro, process.cwd() points to the project root during dev.
+// The CSS file is at server/styles/dfl-inject.css relative to project root.
+const getCssPath = () => {
+  const baseDir = process.cwd()
+  return join(baseDir, "server", "styles", "dfl-inject.css")
+}
 
 /** 读取 DFL 注入样式模板 */
 export function getDflInjectCss(): string {
   try {
-    const cssPath = join(__dirname, "../styles/dfl-inject.css")
-    return readFileSync(cssPath, "utf-8")
+    return readFileSync(getCssPath(), "utf-8")
   } catch {
     // Fallback inline CSS if file not found
     return getFallbackDflCss()

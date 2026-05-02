@@ -1,5 +1,4 @@
 import { CredentialTable } from "#/database/credentials"
-import { getDomainFromSourceId } from "#/utils/sources-domains"
 import { processProxyHtml } from "#/utils/proxy-html"
 import { myFetch } from "#/utils/fetch"
 

@@ -13,12 +13,12 @@ interface DrawerContentProps {
 
 export function DrawerContent({
   title, content, source, author,
-  usedCredential, credentialExpired, elapsed, url,
+  usedCredential, credentialExpired, elapsed,
 }: DrawerContentProps) {
   const sanitized = DOMPurify.sanitize(content, {
     ALLOWED_TAGS: ["p", "br", "strong", "em", "u", "a", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "blockquote", "code", "pre", "img", "figure", "figcaption"],
     ALLOWED_ATTR: ["href", "src", "alt", "title", "class", "target", "rel"],
-    ADD_HOOKS: {
+    ADD_HOOK: {
       afterSanitizeAttributes: (node: Element) => {
         if (node.tagName === "A" && node.getAttribute("href")) {
           node.setAttribute("target", "_blank")

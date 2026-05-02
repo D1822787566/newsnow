@@ -63,7 +63,7 @@ export async function extractContent(options: FetchOptions): Promise<ExtractedCo
 
   return {
     title: article.title || "无标题",
-    content: article.content,
+    content: article.content || "",
     source,
     author: article.byline || "",
     pubDate: null,

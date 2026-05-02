@@ -17,7 +17,7 @@ interface ContextMenuProps {
 
 export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = () => {
       onClose()
     }
     const keyHandler = (e: KeyboardEvent) => {

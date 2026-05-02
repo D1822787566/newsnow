@@ -52,7 +52,7 @@ export class CredentialTable {
   }
 
   async upsert(sourceId: string, domain: string, cookieValue: string): Promise<number> {
-    const result = await this.db.prepare(`
+    await this.db.prepare(`
       INSERT INTO credentials (source_id, domain, cookie_value)
       VALUES (?, ?, ?)
       ON CONFLICT(source_id) DO UPDATE SET

@@ -65,12 +65,15 @@ export function injectDflStyles(html: string): string {
   return `${styleTag}\n${html}`
 }
 
-/** 移除可能限制 iframe 嵌入的 CSP meta 标签 */
+/** 移除可能限制 iframe 嵌入的 CSP meta 标签和已有 <base> 标签 */
 export function removeCspMeta(html: string): string {
   // 移除 <meta http-equiv="Content-Security-Policy" ...>
   html = html.replace(/<meta\s+[^>]*http-equiv\s*=\s*["']?Content-Security-Policy["']?[^>]*>/gi, "")
   // 移除 <meta http-equiv="X-Frame-Options" ...>
   html = html.replace(/<meta\s+[^>]*http-equiv\s*=\s*["']?X-Frame-Options["']?[^>]*>/gi, "")
+  // 移除已有 <base> 标签 — 让 URL 重写完全控制资源加载路径，
+  // 避免原站的 <base> 导致相对 URL 绕过代理直接请求源站
+  html = html.replace(/<base\b[^>]*>/gi, "")
   return html
 }
 

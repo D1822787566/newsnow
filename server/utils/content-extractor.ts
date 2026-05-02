@@ -30,9 +30,15 @@ export async function extractContent(options: FetchOptions): Promise<ExtractedCo
     headers["Cookie"] = cookie
   }
 
+  // 对 36kr 使用更长的超时时间，应对其速率限制导致的间歇性无响应
+  const urlObj = new URL(url)
+  const is36kr = urlObj.hostname.includes("36kr.com")
+  const effectiveTimeout = is36kr ? 30000 : 20000
+
   const html = await myFetch(url, {
     headers,
     redirect: "follow",
+    timeout: effectiveTimeout,
   })
 
   const dom = new JSDOM(html, { url })

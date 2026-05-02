@@ -47,6 +47,75 @@ function getFallbackDflCss(): string {
   `
 }
 
+/**
+ * 生成 URL 重写脚本 — 在 iframe 中拦截所有资源请求并转为代理 URL
+ * 用于处理 JS 动态加载的资源（如 webpack 懒加载的 CSS/JS chunk）
+ */
+function generateUrlRewriteScript(baseUrl: string): string {
+  const urlObj = new URL(baseUrl)
+  const origin = `${urlObj.protocol}//${urlObj.host}`
+  const protocol = urlObj.protocol
+
+  return `<script data-dfl-rewrite="true">(function(){
+var P='/api/preview/proxy?url=',O='${origin}',PR='${protocol}';
+function R(u){
+if(!u||u.indexOf('data:')===0||u.indexOf('blob:')===0||u.indexOf('#')===0||u.indexOf('mailto:')===0||u.indexOf('javascript:')===0)return u;
+if(u.indexOf('http://')!==0&&u.indexOf('https://')!==0){
+if(u.indexOf('//')===0)u=PR+u;
+else if(u.indexOf('/')===0)u=O+u;
+else u=O+'/'+u;
+}
+return P+encodeURIComponent(u);
+}
+var _f=window.fetch;
+window.fetch=function(){
+var a=arguments[0];
+if(typeof a==='string'&&a.indexOf(P)!==0)arguments[0]=R(a);
+else if(a instanceof Request&&a.url.indexOf(P)!==0){
+try{arguments[0]=new Request(R(a.url),a)}catch(e){}
+}
+return _f.apply(this,arguments);
+};
+var _xo=XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open=function(m,u){
+if(u&&u.indexOf(P)!==0)_xo.call(this,m,R(u));
+else _xo.apply(this,arguments);
+};
+var _sc=window.ServiceWorkerContainer;
+if(_sc&&_sc.prototype&&_sc.prototype.register){
+_swReg={};
+}
+function patchEl(el){
+if(!el||el._dflPatched)return;
+el._dflPatched=true;
+var s=el.getAttribute&&el.getAttribute('src');
+if(s&&el.tagName==='IMG')el.setAttribute('src',R(s));
+else if(s&&el.tagName==='SCRIPT')el.setAttribute('src',R(s));
+else if(s&&el.tagName==='SOURCE'){el.setAttribute('src',R(s));var ss=el.getAttribute('srcset');if(ss)el.setAttribute('srcset',ss.split(',').map(function(p){var t=p.trim().split(/\\s+/);t[0]=R(t[0]);return t.join(' ')}).join(', '));}
+var h=el.getAttribute&&el.getAttribute('href');
+if(h&&el.tagName==='LINK')el.setAttribute('href',R(h));
+}
+var _ce=document.createElement;
+document.createElement=function(){var e=_ce.apply(this,arguments);patchEl(e);return e};
+var _ac=Node.prototype.appendChild;
+Node.prototype.appendChild=function(c){patchEl(c);return _ac.call(this,c)};
+var _ai=Node.prototype.insertBefore;
+Node.prototype.insertBefore=function(n,r){patchEl(n);return _ai.call(this,n,r)};
+document.querySelectorAll('img[src],script[src],link[href],source[src],source[srcset]').forEach(patchEl);
+})();</script>`
+}
+
+/** 将 URL 重写脚本注入到 HTML 的 <head> 最前面 */
+function injectUrlRewriteScript(html: string, baseUrl: string): string {
+  const script = generateUrlRewriteScript(baseUrl)
+  // 优先插入到 <head> 标签之后（确保在所有其他脚本之前执行）
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/(<head[^>]*>)/i, `$1${script}`)
+  }
+  // 如果没有 <head>，插在最前面
+  return script + html
+}
+
 /** 将 DFL 样式注入到 HTML 的 <head> 中 */
 export function injectDflStyles(html: string): string {
   const css = getDflInjectCss()
@@ -209,9 +278,12 @@ export function rewriteResourceUrls(html: string, baseUrl: string): string {
 export function processProxyHtml(html: string, baseUrl?: string): string {
   html = removeCspMeta(html)
   if (baseUrl) {
-    // 先重写所有资源 URL 为代理端点（绕过防盗链）
+    // 1. 先重写所有静态 HTML 中的资源 URL 为代理端点（绕过防盗链）
     html = rewriteResourceUrls(html, baseUrl)
+    // 2. 注入运行时 URL 重写脚本，拦截 JS 动态加载的资源请求
+    html = injectUrlRewriteScript(html, baseUrl)
   }
+  // 3. 最后注入 DFL 样式
   html = injectDflStyles(html)
   return html
 }

@@ -88,9 +88,20 @@ export function rewriteResourceUrls(html: string, baseUrl: string): string {
   const urlObj = new URL(baseUrl)
   const origin = `${urlObj.protocol}//${urlObj.host}`
 
-  // 判断资源 URL 是否应该被代理（同域或子域）
+  // 判断资源 URL 是否应该被代理
+  // 策略：代理所有 http/https 资源，排除 data/blob/#/mailto 和已知安全的外部 CDN
+  const EXTERNAL_CDNS = [
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+    "cdn.jsdelivr.net",
+    "unpkg.com",
+    "cdnjs.cloudflare.com",
+    "ajax.googleapis.com",
+    "code.jquery.com",
+    "maxcdn.bootstrapcdn.com",
+  ]
   const shouldProxy = (resourceUrl: string): boolean => {
-    if (!resourceUrl || resourceUrl.startsWith("data:") || resourceUrl.startsWith("blob:")) {
+    if (!resourceUrl || resourceUrl.startsWith("data:") || resourceUrl.startsWith("blob:") || resourceUrl.startsWith("#") || resourceUrl.startsWith("mailto:")) {
       return false
     }
     try {
@@ -103,8 +114,12 @@ export function rewriteResourceUrls(html: string, baseUrl: string): string {
         fullUrl = `${origin}${resourceUrl.startsWith("/") ? "" : "/"}${resourceUrl}`
       }
       const resUrl = new URL(fullUrl)
-      // 同域或子域名检查
-      return resUrl.hostname === urlObj.hostname || resUrl.hostname.endsWith(`.${urlObj.hostname}`)
+      // 排除已知的安全外部 CDN（字体、公共库等）
+      if (EXTERNAL_CDNS.some(d => resUrl.hostname === d || resUrl.hostname.endsWith(`.${d}`))) {
+        return false
+      }
+      // 其他所有 http/https 资源都走代理
+      return true
     } catch {
       return false
     }

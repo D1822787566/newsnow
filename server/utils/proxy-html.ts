@@ -49,7 +49,6 @@ function getFallbackDflCss(): string {
 
 /**
  * 生成 URL 重写脚本 — 在 iframe 中拦截所有资源请求并转为代理 URL
- * 用于处理 JS 动态加载的资源（如 webpack 懒加载的 CSS/JS chunk）
  */
 function generateUrlRewriteScript(baseUrl: string): string {
   const urlObj = new URL(baseUrl)
@@ -59,7 +58,8 @@ function generateUrlRewriteScript(baseUrl: string): string {
   return `<script data-dfl-rewrite="true">(function(){
 var P='/api/preview/proxy?url=',O='${origin}',PR='${protocol}';
 function R(u){
-if(!u||u.indexOf('data:')===0||u.indexOf('blob:')===0||u.indexOf('#')===0||u.indexOf('mailto:')===0||u.indexOf('javascript:')===0)return u;
+if(!u||u.indexOf('data:')===0||u.indexOf('blob:')===0||u.indexOf('#')===0||u.indexOf('javascript:')===0)return u;
+if(u.indexOf(P)===0)return u;
 if(u.indexOf('http://')!==0&&u.indexOf('https://')!==0){
 if(u.indexOf('//')===0)u=PR+u;
 else if(u.indexOf('/')===0)u=O+u;
@@ -67,6 +67,7 @@ else u=O+'/'+u;
 }
 return P+encodeURIComponent(u);
 }
+// 拦截 fetch
 var _f=window.fetch;
 window.fetch=function(){
 var a=arguments[0];
@@ -76,32 +77,60 @@ try{arguments[0]=new Request(R(a.url),a)}catch(e){}
 }
 return _f.apply(this,arguments);
 };
+// 拦截 XHR
 var _xo=XMLHttpRequest.prototype.open;
 XMLHttpRequest.prototype.open=function(m,u){
 if(u&&u.indexOf(P)!==0)_xo.call(this,m,R(u));
 else _xo.apply(this,arguments);
 };
-var _sc=window.ServiceWorkerContainer;
-if(_sc&&_sc.prototype&&_sc.prototype.register){
-_swReg={};
+// 拦截 img/script/link/source 的 src/href 属性 setter
+function patchProp(proto,prop){
+if(!proto||proto._dflPatch)return;
+proto._dflPatch=true;
+var desc=Object.getOwnPropertyDescriptor(proto,prop);
+if(!desc||!desc.set)return;
+var orig=desc.set;
+Object.defineProperty(proto,prop,{
+set:function(v){
+if(typeof v==='string'&&v.indexOf('data:')!==0&&v.indexOf('blob:')!==0&&v.indexOf(P)!==0){
+orig.call(this,R(v));
+}else{
+orig.call(this,v);
 }
-function patchEl(el){
-if(!el||el._dflPatched)return;
-el._dflPatched=true;
-var s=el.getAttribute&&el.getAttribute('src');
-if(s&&el.tagName==='IMG')el.setAttribute('src',R(s));
-else if(s&&el.tagName==='SCRIPT')el.setAttribute('src',R(s));
-else if(s&&el.tagName==='SOURCE'){el.setAttribute('src',R(s));var ss=el.getAttribute('srcset');if(ss)el.setAttribute('srcset',ss.split(',').map(function(p){var t=p.trim().split(/\\s+/);t[0]=R(t[0]);return t.join(' ')}).join(', '));}
-var h=el.getAttribute&&el.getAttribute('href');
-if(h&&el.tagName==='LINK')el.setAttribute('href',R(h));
+},
+get:desc.get,
+configurable:true
+});
 }
+patchProp(HTMLImageElement.prototype,'src');
+patchProp(HTMLScriptElement.prototype,'src');
+patchProp(HTMLLinkElement.prototype,'href');
+patchProp(HTMLSourceElement.prototype,'src');
+patchProp(HTMLSourceElement.prototype,'srcset');
+// 拦截 createElement 和 appendChild
 var _ce=document.createElement;
-document.createElement=function(){var e=_ce.apply(this,arguments);patchEl(e);return e};
+document.createElement=function(){var e=_ce.apply(this,arguments);
+if(e&&e.tagName==='LINK'&&e.href&&!e.href.startsWith('data:')&&e.href.indexOf(P)!==0)try{e.href=R(e.href)}catch(x){}
+if(e&&e.tagName==='IMG'&&e.src&&!e.src.startsWith('data:')&&e.src.indexOf(P)!==0)try{e.src=R(e.src)}catch(x){}
+return e};
 var _ac=Node.prototype.appendChild;
-Node.prototype.appendChild=function(c){patchEl(c);return _ac.call(this,c)};
+Node.prototype.appendChild=function(c){
+if(c&&c.tagName==='LINK'&&c.href&&!c.href.startsWith('data:')&&c.href.indexOf(P)!==0)try{c.href=R(c.href)}catch(x){}
+if(c&&c.tagName==='IMG'&&c.src&&!c.src.startsWith('data:')&&c.src.indexOf(P)!==0)try{c.src=R(c.src)}catch(x){}
+return _ac.call(this,c)};
 var _ai=Node.prototype.insertBefore;
-Node.prototype.insertBefore=function(n,r){patchEl(n);return _ai.call(this,n,r)};
-document.querySelectorAll('img[src],script[src],link[href],source[src],source[srcset]').forEach(patchEl);
+Node.prototype.insertBefore=function(n,r){
+if(n&&n.tagName==='LINK'&&n.href&&!n.href.startsWith('data:')&&n.href.indexOf(P)!==0)try{n.href=R(n.href)}catch(x){}
+if(n&&n.tagName==='IMG'&&n.src&&!n.src.startsWith('data:')&&n.src.indexOf(P)!==0)try{n.src=R(n.src)}catch(x){}
+return _ai.call(this,n,r)};
+// 修补已有元素
+document.querySelectorAll('img,script,link,source').forEach(function(el){
+try{
+if(el.tagName==='LINK'&&el.href&&el.href.indexOf(P)!==0)el.href=R(el.href);
+if(el.tagName==='IMG'&&el.src&&el.src.indexOf(P)!==0)el.src=R(el.src);
+if(el.tagName==='SCRIPT'&&el.src&&el.src.indexOf(P)!==0)el.src=R(el.src);
+}catch(x){}
+});
 })();</script>`
 }
 
@@ -216,7 +245,14 @@ export function rewriteResourceUrls(html: string, baseUrl: string): string {
       return resourceUrl
     }
 
-    return `/api/preview/proxy?url=${encodeURIComponent(fullUrl)}`
+    // 解码 HTML 实体后再编码，避免双编码（&amp; → %26amp%3B）
+    const decoded = fullUrl
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+    return `/api/preview/proxy?url=${encodeURIComponent(decoded)}`
   }
 
   // 重写 <img src="...">

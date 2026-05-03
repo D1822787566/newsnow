@@ -1,9 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion"
-import { useState, useEffect, useCallback } from "react"
-import { OverlayScrollbar } from "../common/overlay-scrollbar"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { myFetch } from "~/utils"
-import { DrawerContent } from "./content"
-import { ProxyIframe } from "./proxy-iframe"
+import { DirectIframe } from "./direct-iframe"
+import { SnapshotFrame } from "./snapshot-frame"
 
 interface PreviewDrawerProps {
   open: boolean
@@ -12,88 +11,140 @@ interface PreviewDrawerProps {
   sourceId: string | null
 }
 
-type PreviewMode = "readable" | "iframe"
+type PreviewState =
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "iframe", url: string, finalUrl?: string }
+  | { kind: "snapshotLoading", reason?: string }
+  | { kind: "snapshot", html: string, title: string, finalUrl?: string }
+  | { kind: "error", message: string, details?: string }
 
-interface FetchState {
-  loading: boolean
-  error: string | null
-  mode: PreviewMode
-  title: string
-  content: string
-  proxyUrl: string | null
-  source: string
-  author: string
-  usedCredential: string | null
-  credentialExpired: boolean
-  elapsed: string
+interface CheckFrameResponse {
+  embeddable: boolean
+  reason: string | null
+  details: string | null
+  finalUrl: string
 }
 
-export function PreviewDrawer({ open, onClose, url, sourceId }: PreviewDrawerProps) {
-  const [state, setState] = useState<FetchState>({
-    loading: false,
-    error: null,
-    mode: "readable",
-    title: "",
-    content: "",
-    proxyUrl: null,
-    source: "",
-    author: "",
-    usedCredential: null,
-    credentialExpired: false,
-    elapsed: "",
-  })
+interface SnapshotResponse {
+  title: string
+  html: string
+  finalUrl: string
+}
 
-  const fetchPreview = useCallback((forceMode?: PreviewMode) => {
-    if (!url || !sourceId) return
+function statusLabel(state: PreviewState) {
+  switch (state.kind) {
+    case "checking":
+      return "检查中"
+    case "iframe":
+      return "原页"
+    case "snapshotLoading":
+      return "生成快照"
+    case "snapshot":
+      return "静态快照"
+    case "error":
+      return "打开失败"
+    case "idle":
+    default:
+      return "待打开"
+  }
+}
 
-    setState({
-      loading: true,
-      error: null,
-      mode: forceMode || "readable",
-      title: "",
-      content: "",
-      proxyUrl: null,
-      source: "",
-      author: "",
-      usedCredential: null,
-      credentialExpired: false,
-      elapsed: "",
-    })
+function heading(url: string | null, state: PreviewState) {
+  if (state.kind === "snapshot" && state.title) return state.title
+  if (!url) return "未选择文章"
 
-    myFetch("/preview/fetch", {
+  try {
+    const parsed = new URL(url)
+    return parsed.hostname.replace(/^www\./, "")
+  } catch {
+    return url
+  }
+}
+
+function copyLink(url: string | null) {
+  if (!url) return
+  void navigator.clipboard?.writeText(url)
+}
+
+export function PreviewDrawer({ open, onClose, url }: PreviewDrawerProps) {
+  const [state, setState] = useState<PreviewState>({ kind: "idle" })
+  const requestIdRef = useRef(0)
+
+  const startRequest = useCallback(() => {
+    requestIdRef.current += 1
+    return requestIdRef.current
+  }, [])
+
+  const isCurrentRequest = useCallback((requestId: number) => {
+    return requestIdRef.current === requestId
+  }, [])
+
+  const loadSnapshot = useCallback((reason?: string, requestId = startRequest()) => {
+    if (!url || !isCurrentRequest(requestId)) return
+
+    setState({ kind: "snapshotLoading", reason })
+
+    myFetch<SnapshotResponse>("/preview/snapshot", {
       method: "POST",
-      body: { url, sourceId },
+      body: { url },
     })
       .then(res => {
-        const mode = forceMode || res.mode || "readable"
+        if (!isCurrentRequest(requestId)) return
         setState({
-          loading: false,
-          error: null,
-          mode,
-          title: res.title || "",
-          content: res.content || "",
-          proxyUrl: res.proxyUrl || null,
-          source: res.source || "",
-          author: res.author || "",
-          usedCredential: res.usedCredential || res.credentialUsed || null,
-          credentialExpired: res.credentialExpired || false,
-          elapsed: res.elapsed || "",
+          kind: "snapshot",
+          title: res.title || "静态快照",
+          html: res.html,
+          finalUrl: res.finalUrl,
         })
       })
       .catch(err => {
-        setState(s => ({
-          ...s,
-          loading: false,
-          error: err?.message || "请求失败，请检查网络",
-        }))
+        if (!isCurrentRequest(requestId)) return
+        setState({
+          kind: "error",
+          message: err?.message || "生成静态快照失败，请在新标签页打开原文。",
+          details: reason,
+        })
       })
-  }, [url, sourceId])
+  }, [isCurrentRequest, startRequest, url])
+
+  const loadPreview = useCallback(() => {
+    if (!url) return
+
+    const requestId = startRequest()
+    setState({ kind: "checking" })
+
+    myFetch<CheckFrameResponse>("/preview/check-frame", {
+      method: "POST",
+      body: { url },
+    })
+      .then(res => {
+        if (!isCurrentRequest(requestId)) return
+        if (res.embeddable) {
+          setState({
+            kind: "iframe",
+            url: res.finalUrl || url,
+            finalUrl: res.finalUrl,
+          })
+          return
+        }
+
+        loadSnapshot(res.reason || res.details || "frame-blocked", requestId)
+      })
+      .catch(err => {
+        if (!isCurrentRequest(requestId)) return
+        loadSnapshot(err?.message || "iframe-check-failed", requestId)
+      })
+  }, [isCurrentRequest, loadSnapshot, startRequest, url])
 
   useEffect(() => {
-    if (open && url && sourceId) {
-      fetchPreview()
+    if (open && url) {
+      loadPreview()
+    } else if (!open) {
+      startRequest()
+      setState({ kind: "idle" })
     }
-  }, [open, url, sourceId, fetchPreview])
+  }, [open, url, loadPreview, startRequest])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -103,10 +154,12 @@ export function PreviewDrawer({ open, onClose, url, sourceId }: PreviewDrawerPro
     return () => document.removeEventListener("keydown", handler)
   }, [open, onClose])
 
-  const handleModeToggle = () => {
-    const newMode: PreviewMode = state.mode === "readable" ? "iframe" : "readable"
-    fetchPreview(newMode)
-  }
+  const currentHeading = heading(url, state)
+  const currentStatusLabel = statusLabel(state)
+  const externalUrl =
+    state.kind === "iframe" || state.kind === "snapshot"
+      ? state.finalUrl || url
+      : url
 
   return (
     <AnimatePresence>
@@ -129,38 +182,27 @@ export function PreviewDrawer({ open, onClose, url, sourceId }: PreviewDrawerPro
           >
             <div className="preview-drawer__top">
               <div>
-                <div className="preview-drawer__label">预览</div>
-                {state.title && (
-                  <div className="preview-drawer__heading">{state.title}</div>
-                )}
+                <div className="preview-drawer__label">侧栏打开</div>
+                <div className="preview-drawer__heading">{currentHeading}</div>
               </div>
               <div className="flex gap-2 items-center">
-                {state.mode && (
-                  <div className="preview-drawer__mode-toggle">
-                    <button
-                      type="button"
-                      className={`preview-drawer__mode-btn ${state.mode === "readable" ? "active" : ""}`}
-                      onClick={() => handleModeToggle()}
-                      title="阅读模式：提取正文，干净简洁"
-                    >
-                      阅读
-                    </button>
-                    <button
-                      type="button"
-                      className={`preview-drawer__mode-btn ${state.mode === "iframe" ? "active" : ""}`}
-                      onClick={() => handleModeToggle()}
-                      title="原页模式：显示原始网页，保留完整布局"
-                    >
-                      原页
-                    </button>
-                  </div>
-                )}
+                <div className="preview-drawer__status-badge">{currentStatusLabel}</div>
                 {url && (
                   <button
                     type="button"
                     className="preview-drawer__icon-btn"
-                    title="在原始链接打开"
-                    onClick={() => window.open(url, "_blank")}
+                    title="复制链接"
+                    onClick={() => copyLink(url)}
+                  >
+                    <span className="i-ph:link-duotone" />
+                  </button>
+                )}
+                {externalUrl && (
+                  <button
+                    type="button"
+                    className="preview-drawer__icon-btn"
+                    title="在新标签页打开"
+                    onClick={() => window.open(externalUrl, "_blank")}
                   >
                     <span className="i-ph:arrow-square-out-duotone" />
                   </button>
@@ -176,77 +218,60 @@ export function PreviewDrawer({ open, onClose, url, sourceId }: PreviewDrawerPro
               </div>
             </div>
 
-            {state.mode === "readable" ? (
-              <OverlayScrollbar
-                className="preview-drawer__scroll"
-                options={{ overflow: { x: "hidden" } }}
-                defer
-              >
-                {state.loading && (
-                  <div className="preview-drawer__loading">
-                    <span className="i-ph:spinner-duotone animate-spin text-2xl" />
-                    <span>正在抓取内容...</span>
-                  </div>
-                )}
-                {state.error && (
-                  <div className="preview-drawer__error">
-                    <span className="i-ph:warning-circle-duotone text-2xl" />
-                    <p>{state.error}</p>
+            <div className="preview-drawer__iframe-container">
+              {state.kind === "checking" && (
+                <div className="preview-drawer__loading">
+                  <span className="i-ph:spinner-duotone animate-spin text-2xl" />
+                  <span>正在检查页面是否支持侧栏打开...</span>
+                </div>
+              )}
+
+              {state.kind === "snapshotLoading" && (
+                <div className="preview-drawer__loading">
+                  <span className="i-ph:spinner-duotone animate-spin text-2xl" />
+                  <span>原页无法直接嵌入，正在生成静态快照...</span>
+                </div>
+              )}
+
+              {state.kind === "iframe" && (
+                <DirectIframe
+                  url={state.finalUrl || state.url}
+                  onTrySnapshot={() => loadSnapshot("manual-snapshot")}
+                />
+              )}
+
+              {state.kind === "snapshot" && (
+                <SnapshotFrame html={state.html} title={state.title} />
+              )}
+
+              {state.kind === "error" && (
+                <div className="preview-drawer__error">
+                  <span className="i-ph:warning-circle-duotone text-2xl" />
+                  <p>{state.message}</p>
+                  {state.details && <p className="preview-drawer__error-detail">{state.details}</p>}
+                  <div className="flex gap-2 items-center">
                     {url && (
                       <button
                         type="button"
                         className="preview-drawer__error-btn"
-                        onClick={() => window.open(url, "_blank")}
+                        onClick={() => copyLink(url)}
                       >
-                        &rarr; 在浏览器中打开
+                        复制链接
                       </button>
                     )}
-                  </div>
-                )}
-                {!state.loading && !state.error && state.content && (
-                  <DrawerContent
-                    title={state.title}
-                    content={state.content}
-                    source={state.source}
-                    author={state.author}
-                    usedCredential={state.usedCredential}
-                    credentialExpired={state.credentialExpired}
-                    elapsed={state.elapsed}
-                    url={url || ""}
-                  />
-                )}
-              </OverlayScrollbar>
-            ) : (
-              <div className="preview-drawer__iframe-container">
-                {state.loading && (
-                  <div className="preview-drawer__loading">
-                    <span className="i-ph:spinner-duotone animate-spin text-2xl" />
-                    <span>正在加载原始页面...</span>
-                  </div>
-                )}
-                {state.error && (
-                  <div className="preview-drawer__error">
-                    <span className="i-ph:warning-circle-duotone text-2xl" />
-                    <p>{state.error}</p>
-                    {url && (
+                    {externalUrl && (
                       <button
                         type="button"
                         className="preview-drawer__error-btn"
-                        onClick={() => window.open(url, "_blank")}
+                        onClick={() => window.open(externalUrl, "_blank")}
                       >
-                        &rarr; 在浏览器中打开
+                        在新标签页打开
                       </button>
                     )}
                   </div>
-                )}
-                {!state.loading && !state.error && state.proxyUrl && (
-                  <ProxyIframe
-                    proxyUrl={state.proxyUrl}
-                    externalUrl={url || undefined}
-                  />
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </motion.div>
         </>
       )}

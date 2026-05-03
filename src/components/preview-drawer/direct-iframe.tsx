@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface DirectIframeProps {
   url: string
@@ -8,15 +8,27 @@ interface DirectIframeProps {
 export function DirectIframe({ url, onTrySnapshot }: DirectIframeProps) {
   const [loading, setLoading] = useState(true)
   const [slow, setSlow] = useState(false)
+  const timerRef = useRef<number | null>(null)
 
   useEffect(() => {
     setLoading(true)
     setSlow(false)
-    const timer = window.setTimeout(() => {
+    timerRef.current = window.setTimeout(() => {
       setSlow(true)
     }, 8000)
-    return () => window.clearTimeout(timer)
+    return () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
   }, [url])
+
+  const handleLoad = () => {
+    setLoading(false)
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }
 
   return (
     <div className="preview-drawer__iframe-wrap">
@@ -38,7 +50,7 @@ export function DirectIframe({ url, onTrySnapshot }: DirectIframeProps) {
         src={url}
         className="preview-drawer__iframe"
         sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-        onLoad={() => setLoading(false)}
+        onLoad={handleLoad}
         title="NewsNow 原页预览"
       />
     </div>

@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer"
 import { JSDOM } from "jsdom"
 import { chromium } from "playwright"
-import { assertSafePreviewUrl } from "./url-safety"
+import { assertSafePreviewUrl, assertSafeResolvedPreviewUrl } from "./url-safety"
 
 export interface SnapshotResult {
   title: string
@@ -114,7 +114,7 @@ export async function createSnapshot(rawUrl: string): Promise<SnapshotResult> {
     }).catch(() => undefined)
 
     const finalUrl = page.url()
-    assertSafePreviewUrl(finalUrl)
+    assertSafeResolvedPreviewUrl(finalUrl)
 
     const rawHtml = await page.content()
     const html = sanitizeSnapshotHtml(rawHtml, finalUrl)

@@ -1,5 +1,5 @@
 import { evaluateFramePolicy, headersToRecord } from "#/utils/frame-policy"
-import { assertSafePreviewUrl } from "#/utils/url-safety"
+import { assertSafePreviewUrl, assertSafeResolvedPreviewUrl } from "#/utils/url-safety"
 
 function getRequestOrigin(event: any) {
   const origin = getHeader(event, "origin")
@@ -39,10 +39,13 @@ export default defineEventHandler(async (event) => {
       },
     })
 
+    const finalUrl = response.url || targetUrl.href
+    assertSafeResolvedPreviewUrl(finalUrl)
+
     const verdict = evaluateFramePolicy(response.headers, currentOrigin)
     return {
       ...verdict,
-      finalUrl: response.url || targetUrl.href,
+      finalUrl,
       status: response.status,
       headers: headersToRecord(response.headers),
     }

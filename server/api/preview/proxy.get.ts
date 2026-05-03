@@ -1,5 +1,6 @@
 import { CredentialTable } from "#/database/credentials"
 import { processProxyHtml } from "#/utils/proxy-html"
+import { assertSafePreviewUrl, assertSafeResolvedPreviewUrl } from "#/utils/url-safety"
 
 // 需要作为 HTML 处理并执行 URL 重写的内容类型
 const HTML_CONTENT_TYPES = ["text/html", "application/xhtml+xml", "application/xml"]
@@ -14,14 +15,9 @@ export default defineEventHandler(async (event) => {
 
   let targetUrl: URL
   try {
-    targetUrl = new URL(url)
-  } catch {
-    throw createError({ statusCode: 400, message: "url 参数格式无效" })
-  }
-
-  // 安全校验：仅允许 HTTP/HTTPS 协议
-  if (!["http:", "https:"].includes(targetUrl.protocol)) {
-    throw createError({ statusCode: 400, message: "仅支持 HTTP/HTTPS 协议" })
+    targetUrl = assertSafePreviewUrl(url)
+  } catch (error: any) {
+    throw createError({ statusCode: 400, message: error.message || "URL 不安全" })
   }
 
   // 查找凭证
@@ -33,7 +29,9 @@ export default defineEventHandler(async (event) => {
   let cookie: string | undefined
   const sources = await credTable.getAll()
   for (const src of sources) {
-    if (targetUrl.hostname.includes(src.domain)) {
+    const hostname = targetUrl.hostname.toLowerCase()
+    const domain = src.domain.toLowerCase()
+    if (hostname === domain || hostname.endsWith(`.${domain}`)) {
       cookie = src.cookieValue
       break
     }
@@ -54,14 +52,16 @@ export default defineEventHandler(async (event) => {
 
   // 抓取源网页（使用 $fetch.raw 获取完整响应对象）
   let response: any
-  let body: string
+  let body: any
   try {
     response = await $fetch.raw(url, {
       headers,
       redirect: "follow",
       timeout: 30000,
+      responseType: "arrayBuffer",
     })
-    body = response._data ?? await response.text()
+    assertSafeResolvedPreviewUrl(response.url || targetUrl.href)
+    body = response._data
   } catch (error: any) {
     throw createError({
       statusCode: 502,
@@ -75,7 +75,7 @@ export default defineEventHandler(async (event) => {
 
   if (isHtml) {
     // HTML：执行处理管道（CSP 移除 + URL 重写 + DFL 样式）
-    let html = body
+    let html = Buffer.from(body).toString("utf-8")
     // 限制响应体大小（5MB）
     if (html.length > 5 * 1024 * 1024) {
       html = html.slice(0, 5 * 1024 * 1024)

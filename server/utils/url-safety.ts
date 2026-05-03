@@ -79,3 +79,11 @@ export function assertSafePreviewUrl(rawUrl: string): URL {
 
   return url
 }
+
+export function assertSafeResolvedPreviewUrl(rawUrl: string) {
+  try {
+    return assertSafePreviewUrl(rawUrl)
+  } catch {
+    throw new Error("重定向到了不安全的地址")
+  }
+}

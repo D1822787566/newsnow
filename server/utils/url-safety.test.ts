@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { assertSafePreviewUrl, isPrivateHostname } from "./url-safety"
+import { assertSafePreviewUrl, assertSafeResolvedPreviewUrl, isPrivateHostname } from "./url-safety"
 
 describe("isPrivateHostname", () => {
   it("rejects localhost names", () => {
@@ -58,5 +58,16 @@ describe("assertSafePreviewUrl", () => {
 
   it("rejects invalid URL strings", () => {
     expect(() => assertSafePreviewUrl("not a url")).toThrow("URL 格式无效")
+  })
+})
+
+describe("assertSafeResolvedPreviewUrl", () => {
+  it("allows safe resolved URLs", () => {
+    expect(assertSafeResolvedPreviewUrl("https://example.com/article").href).toBe("https://example.com/article")
+  })
+
+  it("rejects private redirect targets", () => {
+    expect(() => assertSafeResolvedPreviewUrl("http://127.0.0.1:8033/internal")).toThrow("重定向到了不安全的地址")
+    expect(() => assertSafeResolvedPreviewUrl("http://192.168.1.1/admin")).toThrow("重定向到了不安全的地址")
   })
 })

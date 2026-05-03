@@ -1,6 +1,5 @@
 import { CredentialTable } from "#/database/credentials"
 import { processProxyHtml } from "#/utils/proxy-html"
-import { myFetch } from "#/utils/fetch"
 
 // 需要作为 HTML 处理并执行 URL 重写的内容类型
 const HTML_CONTENT_TYPES = ["text/html", "application/xhtml+xml", "application/xml"]

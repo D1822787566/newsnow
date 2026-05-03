@@ -75,6 +75,15 @@ export function sanitizeSnapshotHtml(rawHtml: string, baseUrl: string) {
   base.setAttribute("href", baseUrl)
   head.insertBefore(base, head.firstChild)
 
+  const viewportMeta = document.createElement("meta")
+  viewportMeta.setAttribute("name", "viewport")
+  viewportMeta.setAttribute("content", "width=device-width, initial-scale=1.0")
+  head.appendChild(viewportMeta)
+
+  const styleEl = document.createElement("style")
+  styleEl.textContent = "body { max-width: 100vw; overflow-x: hidden; }"
+  head.appendChild(styleEl)
+
   const notice = document.createElement("div")
   notice.textContent = "这是静态快照，交互功能不可用"
   notice.setAttribute("style", "position: sticky; top: 0; z-index: 2147483647; padding: 10px 14px; background: #fff7ed; color: #9a3412; border-bottom: 1px solid #fed7aa; font: 14px/1.4 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;")

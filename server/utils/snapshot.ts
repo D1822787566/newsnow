@@ -1,4 +1,7 @@
+import { Buffer } from "node:buffer"
 import { JSDOM } from "jsdom"
+import { chromium } from "playwright"
+import { assertSafePreviewUrl } from "./url-safety"
 
 export interface SnapshotResult {
   title: string
@@ -80,6 +83,54 @@ export function sanitizeSnapshotHtml(rawHtml: string, baseUrl: string) {
   return `<!doctype html>\n${document.documentElement.outerHTML}`
 }
 
-export async function createSnapshot(_url: string): Promise<SnapshotResult> {
-  throw new Error("Playwright snapshot generation is added in Task 6")
+const SNAPSHOT_TIMEOUT_MS = 15000
+const NETWORK_IDLE_TIMEOUT_MS = 3000
+const MAX_SNAPSHOT_HTML_BYTES = 3 * 1024 * 1024
+
+function byteLength(value: string) {
+  return Buffer.byteLength(value, "utf8")
+}
+
+export async function createSnapshot(rawUrl: string): Promise<SnapshotResult> {
+  const start = Date.now()
+  const safeUrl = assertSafePreviewUrl(rawUrl)
+  const browser = await chromium.launch({ headless: true })
+
+  try {
+    const context = await browser.newContext({
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+      locale: "zh-CN",
+      viewport: { width: 1365, height: 900 },
+    })
+    const page = await context.newPage()
+
+    await page.goto(safeUrl.href, {
+      waitUntil: "domcontentloaded",
+      timeout: SNAPSHOT_TIMEOUT_MS,
+    })
+
+    await page.waitForLoadState("networkidle", {
+      timeout: NETWORK_IDLE_TIMEOUT_MS,
+    }).catch(() => undefined)
+
+    const finalUrl = page.url()
+    assertSafePreviewUrl(finalUrl)
+
+    const rawHtml = await page.content()
+    const html = sanitizeSnapshotHtml(rawHtml, finalUrl)
+
+    if (byteLength(html) > MAX_SNAPSHOT_HTML_BYTES) {
+      throw new Error("snapshot-too-large")
+    }
+
+    return {
+      title: await page.title(),
+      html,
+      source: new URL(finalUrl).hostname,
+      elapsed: ((Date.now() - start) / 1000).toFixed(1),
+      finalUrl,
+    }
+  } finally {
+    await browser.close()
+  }
 }

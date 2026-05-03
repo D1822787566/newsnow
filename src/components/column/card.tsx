@@ -251,7 +251,7 @@ function NewsListHot({ items, sourceId }: { items: NewsItem[], sourceId: SourceI
       },
     },
     {
-      label: "在侧栏预览",
+      label: "在侧栏打开",
       icon: "i-ph:sidebar-simple-duotone",
       action: () => {
         window.dispatchEvent(new CustomEvent("newsnow:preview", {
@@ -328,7 +328,7 @@ function NewsListTimeLine({ items, sourceId }: { items: NewsItem[], sourceId: So
       },
     },
     {
-      label: "在侧栏预览",
+      label: "在侧栏打开",
       icon: "i-ph:sidebar-simple-duotone",
       action: () => {
         window.dispatchEvent(new CustomEvent("newsnow:preview", {

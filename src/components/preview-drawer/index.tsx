@@ -186,7 +186,7 @@ export function PreviewDrawer({ open, onClose, url }: PreviewDrawerProps) {
                 <div className="preview-drawer__heading">{currentHeading}</div>
               </div>
               <div className="flex gap-2 items-center">
-                <div className="preview-drawer__status-badge">{currentStatusLabel}</div>
+                <div className={`preview-drawer__status-badge preview-drawer__status-badge--${state.kind}`}>{currentStatusLabel}</div>
                 {url && (
                   <button
                     type="button"

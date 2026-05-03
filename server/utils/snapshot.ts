@@ -75,13 +75,15 @@ export function sanitizeSnapshotHtml(rawHtml: string, baseUrl: string) {
   base.setAttribute("href", baseUrl)
   head.insertBefore(base, head.firstChild)
 
+  document.querySelectorAll('meta[name="viewport" i]').forEach(element => element.remove())
+
   const viewportMeta = document.createElement("meta")
   viewportMeta.setAttribute("name", "viewport")
   viewportMeta.setAttribute("content", "width=device-width, initial-scale=1.0")
   head.appendChild(viewportMeta)
 
   const styleEl = document.createElement("style")
-  styleEl.textContent = "body { max-width: 100vw; overflow-x: hidden; }"
+  styleEl.textContent = "html, body { max-width: 100vw; overflow-x: hidden; }"
   head.appendChild(styleEl)
 
   const notice = document.createElement("div")

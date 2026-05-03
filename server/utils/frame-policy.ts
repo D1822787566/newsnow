@@ -106,3 +106,10 @@ export function evaluateFramePolicy(headers: HeaderInput, currentOrigin: string)
     details: null,
   }
 }
+export function headersToRecord(headers: Headers) {
+  const record: Record<string, string> = {}
+  headers.forEach((value, key) => {
+    record[key.toLowerCase()] = value
+  })
+  return record
+}

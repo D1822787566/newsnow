@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { evaluateFramePolicy } from "./frame-policy"
+import { evaluateFramePolicy, headersToRecord } from "./frame-policy"
 
 describe("evaluateFramePolicy", () => {
   const origin = "http://localhost:5173"
@@ -75,6 +75,14 @@ describe("evaluateFramePolicy", () => {
       embeddable: true,
       reason: null,
       details: null,
+    })
+  })
+
+  it("converts Headers to a lowercase record", () => {
+    const headers = new Headers()
+    headers.set("X-Frame-Options", "DENY")
+    expect(headersToRecord(headers)).toEqual({
+      "x-frame-options": "DENY",
     })
   })
 

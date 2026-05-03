@@ -67,6 +67,16 @@ describe("sanitizeSnapshotHtml", () => {
     expect(html).toContain("/logo.png")
   })
 
+  it("injects viewport meta for mobile rendering", () => {
+    const html = sanitizeSnapshotHtml("<html><head></head><body><p>ok</p></body></html>", baseUrl)
+
+    expect(html).toContain('<meta name="viewport"')
+    expect(html).toContain("width=device-width")
+    expect(html).toContain("initial-scale=1.0")
+    expect(html).toContain("max-width: 100vw")
+    expect(html).toContain("overflow-x: hidden")
+  })
+
   it("disables forms instead of allowing submission", () => {
     const html = sanitizeSnapshotHtml("<html><body><form action=\"/submit\"><input name=\"q\"><button>Go</button></form></body></html>", baseUrl)
 

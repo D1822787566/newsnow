@@ -7,14 +7,10 @@ interface MobileViewportIframeProps {
   onError: (msg: string) => void
 }
 
-const MOBILE_WIDTH = 375
-
 export function MobileViewportIframe({ url, containerWidth, onLoad, onError }: MobileViewportIframeProps) {
   const [loading, setLoading] = useState(true)
   const [slowNotice, setSlowNotice] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null)
-
-  const scale = containerWidth / MOBILE_WIDTH
 
   useEffect(() => {
     setLoading(true)
@@ -44,7 +40,7 @@ export function MobileViewportIframe({ url, containerWidth, onLoad, onError }: M
   return (
     <div
       className="preview-drawer__iframe-wrap"
-      style={{ overflow: "hidden" }}
+      style={{ overflow: "hidden", width: `${containerWidth}px` }}
     >
       {loading && (
         <div className="preview-drawer__loading preview-drawer__loading--overlay">
@@ -65,24 +61,15 @@ export function MobileViewportIframe({ url, containerWidth, onLoad, onError }: M
         </div>
       )}
 
-      <div
-        style={{
-          width: `${MOBILE_WIDTH}px`,
-          height: `${100 / scale}%`,
-          transformOrigin: "top left",
-          transform: `scale(${scale})`,
-        }}
-      >
-        <iframe
-          className="preview-drawer__iframe"
-          src={url}
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          onLoad={handleLoad}
-          onError={handleError}
-          title="预览"
-          referrerPolicy="no-referrer"
-        />
-      </div>
+      <iframe
+        className="preview-drawer__iframe"
+        src={url}
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        onLoad={handleLoad}
+        onError={handleError}
+        title="预览"
+        referrerPolicy="no-referrer"
+      />
     </div>
   )
 }

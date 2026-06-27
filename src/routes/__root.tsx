@@ -34,13 +34,11 @@ function RootComponent() {
 
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [previewSourceId, setPreviewSourceId] = useState<string | null>(null)
 
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail
       setPreviewUrl(detail.url)
-      setPreviewSourceId(detail.sourceId)
       setPreviewOpen(true)
     }
     window.addEventListener("newsnow:preview", handler as EventListener)
@@ -88,7 +86,6 @@ function RootComponent() {
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         url={previewUrl}
-        sourceId={previewSourceId}
       />
       {import.meta.env.DEV && (
         <>

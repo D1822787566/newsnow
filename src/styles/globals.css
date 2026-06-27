@@ -427,7 +427,7 @@ footer {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 480px;
+  width: var(--preview-width, 480px);
   max-width: 80vw;
   background: rgba(242, 234, 211, 0.98);
   border-left: 1.5px solid rgba(255, 255, 255, 0.8);
@@ -443,6 +443,23 @@ footer {
   padding: 16px 20px;
   border-bottom: 1px solid var(--dfl-rule);
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.preview-drawer__drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+  transition: background 0.2s;
+}
+.preview-drawer__drag-handle:hover,
+.preview-drawer__drag-handle:active {
+  background: rgba(31, 26, 20, 0.15);
 }
 .preview-drawer__label {
   font-size: 10px;
@@ -472,61 +489,6 @@ footer {
 }
 .preview-drawer__icon-btn:hover {
   background: rgba(31, 26, 20, 0.1);
-}
-.preview-drawer__scroll {
-  flex: 1;
-  overflow-y: auto;
-}
-.preview-drawer__content {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-}
-.preview-drawer__header {
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--dfl-rule);
-}
-.preview-drawer__meta {
-  display: flex;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--dfl-ink-3);
-}
-.preview-drawer__title {
-  font-family: 'Noto Serif SC', serif;
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--dfl-ink);
-  margin: 4px 0 0;
-  line-height: 1.5;
-}
-.preview-drawer__body {
-  flex: 1;
-  padding: 20px;
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--dfl-ink-2);
-}
-.preview-drawer__body p { margin: 0.8em 0; }
-.preview-drawer__body a { color: var(--dfl-blue); text-decoration: underline; }
-.preview-drawer__body img { max-width: 100%; border-radius: 8px; }
-.preview-drawer__body blockquote {
-  border-left: 3px solid var(--dfl-rule-2);
-  padding-left: 12px;
-  color: var(--dfl-ink-3);
-  margin: 12px 0;
-}
-.preview-drawer__footer {
-  padding: 10px 20px;
-  border-top: 1px solid var(--dfl-rule);
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--dfl-ink-3);
-  flex-shrink: 0;
-}
-.preview-drawer__status--warn {
-  color: var(--dfl-yellow);
 }
 .preview-drawer__loading,
 .preview-drawer__error {
@@ -731,9 +693,6 @@ footer {
   border: none;
   flex: 1;
 }
-.preview-drawer__iframe--snapshot {
-  overflow-y: auto;
-}
 .preview-drawer__iframe-wrap {
   flex: 1;
   display: flex;
@@ -753,38 +712,6 @@ footer {
   z-index: 10;
 }
 
-.preview-drawer__status-badge {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(31, 26, 20, 0.18);
-  background: rgba(242, 234, 211, 0.72);
-  color: var(--dfl-ink-2);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.preview-drawer__status-badge--iframe {
-  background: rgba(43, 94, 139, 0.12);
-  color: var(--dfl-blue);
-  border-color: rgba(43, 94, 139, 0.24);
-}
-
-.preview-drawer__status-badge--snapshot,
-.preview-drawer__status-badge--snapshotLoading {
-  background: rgba(192, 57, 43, 0.10);
-  color: var(--dfl-red);
-  border-color: rgba(192, 57, 43, 0.22);
-}
-
-.preview-drawer__status-badge--error {
-  background: rgba(192, 57, 43, 0.16);
-  color: var(--dfl-red);
-  border-color: rgba(192, 57, 43, 0.32);
-}
 
 .preview-drawer__loading--overlay {
   position: absolute;
@@ -813,8 +740,7 @@ footer {
   box-shadow: 0 16px 40px rgba(31, 26, 20, 0.16);
 }
 
-.preview-drawer__slow-notice button,
-.preview-drawer__error-actions button {
+.preview-drawer__slow-notice button {
   border: 1px solid rgba(43, 94, 139, 0.28);
   border-radius: 999px;
   padding: 6px 10px;
@@ -824,21 +750,7 @@ footer {
   font-weight: 700;
 }
 
-.preview-drawer__slow-notice button:hover,
-.preview-drawer__error-actions button:hover {
+.preview-drawer__slow-notice button:hover {
   background: rgba(43, 94, 139, 0.16);
 }
 
-.preview-drawer__error-detail {
-  margin-top: -4px;
-  max-width: 420px;
-  color: var(--dfl-ink-3);
-  font-size: 12px;
-  word-break: break-word;
-}
-
-.preview-drawer__error-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}

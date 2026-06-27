@@ -232,7 +232,7 @@ function NewsUpdatedTime({ date }: { date: string | number }) {
   const relativeTime = useRelativeTime(date)
   return <>{relativeTime}</>
 }
-function NewsListHot({ items, sourceId }: { items: NewsItem[], sourceId: SourceID }) {
+function NewsListHot({ items }: { items: NewsItem[], sourceId: SourceID }) {
   const { width } = useWindowSize()
   const [menuPos, setMenuPos] = useState<{ x: number; y: number; url: string } | null>(null)
 
@@ -255,7 +255,7 @@ function NewsListHot({ items, sourceId }: { items: NewsItem[], sourceId: SourceI
       icon: "i-ph:sidebar-simple-duotone",
       action: () => {
         window.dispatchEvent(new CustomEvent("newsnow:preview", {
-          detail: { url: menuPos!.url, sourceId },
+          detail: { url: menuPos!.url },
         }))
         setMenuPos(null)
       },
@@ -309,7 +309,7 @@ function NewsListHot({ items, sourceId }: { items: NewsItem[], sourceId: SourceI
   )
 }
 
-function NewsListTimeLine({ items, sourceId }: { items: NewsItem[], sourceId: SourceID }) {
+function NewsListTimeLine({ items }: { items: NewsItem[], sourceId: SourceID }) {
   const { width } = useWindowSize()
   const [menuPos, setMenuPos] = useState<{ x: number; y: number; url: string } | null>(null)
 
@@ -332,7 +332,7 @@ function NewsListTimeLine({ items, sourceId }: { items: NewsItem[], sourceId: So
       icon: "i-ph:sidebar-simple-duotone",
       action: () => {
         window.dispatchEvent(new CustomEvent("newsnow:preview", {
-          detail: { url: menuPos!.url, sourceId },
+          detail: { url: menuPos!.url },
         }))
         setMenuPos(null)
       },

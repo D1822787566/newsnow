@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio"
-import { Agent } from "undici"
+import { Agent, fetch as undiciFetch } from "undici"
 import { CredentialTable } from "#/database/credentials"
 
 // 微博服务器 SSL 证书时间经常异常，需要放宽 TLS 验证
@@ -29,15 +29,17 @@ export default defineSource(async () => {
   if (!weiboCookie) {
     weiboCookie = process.env.WEIBO_COOKIE
   }
-  const html = await myFetch(url, {
+
+  // 使用 undici fetch 而非 Node 原生 fetch，因为 dispatcher 选项仅 undici 支持
+  const res = await undiciFetch(url, {
     dispatcher: weiboAgent,
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-      // https://github.com/v5tech/weibo-trending-hot-search
       ...(weiboCookie ? { "Cookie": weiboCookie } : {}),
       "referer": url,
     },
   })
+  const html = await res.text()
 
   const $ = cheerio.load(html)
 

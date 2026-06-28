@@ -72,12 +72,10 @@ export function Menu() {
                 <span className="i-ph:github-logo-duotone inline-block" />
                 <span>Star on Github </span>
               </li>
-              {enableLogin && (
-                <li onClick={() => { setCredOpen(true); show(false) }}>
-                  <span className="i-ph:key-duotone inline-block" />
-                  <span>站点凭证管理</span>
-                </li>
-              )}
+              <li onClick={() => { setCredOpen(true); show(false) }}>
+                <span className="i-ph:key-duotone inline-block" />
+                <span>站点凭证管理</span>
+              </li>
               <li className="flex gap-2 items-center">
                 <a
                   href="https://github.com/ourongxing/newsnow"

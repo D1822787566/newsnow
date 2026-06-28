@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio"
 import { Agent } from "undici"
+import { CredentialTable } from "#/database/credentials"
 
 // 微博服务器 SSL 证书时间经常异常，需要放宽 TLS 验证
 const weiboAgent = new Agent({
@@ -12,7 +13,22 @@ export default defineSource(async () => {
   const baseurl = "https://s.weibo.com"
   const url = `${baseurl}/top/summary?cate=realtimehot`
 
-  const weiboCookie = process.env.WEIBO_COOKIE
+  // Cookie 来源优先级：credentials DB → 环境变量 → 无 Cookie
+  let weiboCookie: string | undefined
+  try {
+    const db = useDatabase()
+    const credTable = new CredentialTable(db)
+    await credTable.init()
+    const credential = await credTable.getBySourceId("weibo")
+    if (credential?.cookieValue) {
+      weiboCookie = credential.cookieValue
+    }
+  } catch {
+    // DB 不可用，降级到环境变量
+  }
+  if (!weiboCookie) {
+    weiboCookie = process.env.WEIBO_COOKIE
+  }
   const html = await myFetch(url, {
     dispatcher: weiboAgent,
     headers: {
